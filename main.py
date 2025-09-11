@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, jsonify, session, redirect, u
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 import os
+import sys
 from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 from decimal import Decimal
@@ -16,31 +17,71 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Ensure we're running from the correct directory
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
 # Initialize Flask app
 app = Flask(__name__)
 
 # Import configuration
-from config import config
+# Configuration dictionary for different environments
+class BaseConfig:
+    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'your-secret-key-here')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    CORS_ORIGINS = "*"
+    
+    # Ensure instance path is in the correct directory
+    INSTANCE_PATH = os.path.join(BASE_DIR, 'instance')
+
+class DevelopmentConfig(BaseConfig):
+    DEBUG = True
+    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(BaseConfig.BASE_DIR, "instance", "fee_management.db")}'
+
+class ProductionConfig(BaseConfig):
+    DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.environ.get(
+        'DATABASE_URL',
+        'postgresql://username:password@host:port/dbname'
+    )
+
+config = {
+    'development': DevelopmentConfig,
+    'production': ProductionConfig,
+    'default': DevelopmentConfig
+}
 
 # Get configuration based on environment
 config_name = os.environ.get('FLASK_ENV', 'development')
 app.config.from_object(config[config_name])
+
+# Ensure required directories exist before initializing extensions
+def ensure_directories():
+    """Ensure required directories exist"""
+    try:
+        instance_dir = os.path.join(app.config['BASE_DIR'], 'instance')
+        logs_dir = os.path.join(app.config['BASE_DIR'], 'logs')
+        
+        os.makedirs(instance_dir, exist_ok=True)
+        os.makedirs(logs_dir, exist_ok=True)
+        
+        print(f"✓ Directories created successfully:")
+        print(f"  - Instance: {instance_dir}")
+        print(f"  - Logs: {logs_dir}")
+        
+    except Exception as e:
+        print(f"✗ Error creating directories: {e}")
+        sys.exit(1)
+
+# Create directories first
+ensure_directories()
 
 # Initialize extensions
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 cors = CORS(app, resources={r"/api/*": {"origins": app.config['CORS_ORIGINS']}})
 
-# Ensure required directories exist
-os.makedirs(os.path.join(app.config['BASE_DIR'], 'instance'), exist_ok=True)
-os.makedirs(os.path.join(app.config['BASE_DIR'], 'logs'), exist_ok=True)
-
-from flask import render_template, jsonify, request, session
-from decimal import Decimal
-import uuid
-from datetime import datetime
-import logging
-from logging.handlers import RotatingFileHandler
 
 # Setup logging
 handler = RotatingFileHandler(
@@ -159,7 +200,6 @@ def employee_login():
 @app.route('/employloginpage')
 def employee_login_page():
     return render_template('employloginpage.html')
-    return render_template('employlogin.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -243,7 +283,7 @@ def employee_auth():
 
         # Handle different authentication methods
         if auth_method == 'biometric':
-            if not auth_data and not user.biometric_id:
+            if not user.biometric_id and auth_data:
                 # New registration
                 user.biometric_id = auth_data
                 db.session.commit()
@@ -251,15 +291,20 @@ def employee_auth():
                     'success': True,
                     'message': 'Biometric registered successfully'
                 })
-            elif user.biometric_id and user.biometric_id == auth_data:
+            elif user.biometric_id and auth_data and user.biometric_id == auth_data:
                 session['user_id'] = user.id
                 return jsonify({
                     'success': True,
                     'message': 'Biometric authentication successful'
                 })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Biometric authentication failed'
+                }), 401
             
         elif auth_method == 'face':
-            if not auth_data and not user.face_data:
+            if not user.face_data and auth_data:
                 # New registration
                 user.face_data = auth_data
                 db.session.commit()
@@ -267,12 +312,17 @@ def employee_auth():
                     'success': True,
                     'message': 'Face data registered successfully'
                 })
-            elif user.face_data and user.face_data == auth_data:
+            elif user.face_data and auth_data and user.face_data == auth_data:
                 session['user_id'] = user.id
                 return jsonify({
                     'success': True,
                     'message': 'Face authentication successful'
                 })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'Face authentication failed'
+                }), 401
         
         else:
             session['user_id'] = user.id
@@ -881,7 +931,35 @@ def init_db_command():
 
 if __name__ == '__main__':
     try:
+        print("=" * 50)
+        print("Fee Management System Starting...")
+        print("=" * 50)
+        print(f"Working directory: {os.getcwd()}")
+        print(f"Script directory: {script_dir}")
+        print(f"Instance path: {app.config.get('INSTANCE_PATH', 'Not set')}")
+        print()
+        
+        # Initialize database
+        print("Initializing database...")
         init_db()
-        app.run(debug=True, host='0.0.0.0')
+        print("✓ Database initialized successfully")
+        print()
+        
+        # Start the application
+        print("Starting Flask application...")
+        print("✓ Application will be available at: http://localhost:5000")
+        print("✓ Press Ctrl+C to stop the application")
+        print("=" * 50)
+        
+        app.run(debug=True, host='0.0.0.0', port=5000)
+        
+    except PermissionError as e:
+        print(f"✗ Permission Error: {e}")
+        print("Please run the application from the correct directory or with proper permissions.")
+        print(f"Current directory: {os.getcwd()}")
+        print(f"Expected directory: {script_dir}")
+        sys.exit(1)
     except Exception as e:
+        print(f"✗ Application startup error: {str(e)}")
         app.logger.error(f"Application startup error: {str(e)}")
+        sys.exit(1)

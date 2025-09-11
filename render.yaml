@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: fee-management-system
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://vemu_fee_user:SoaqripTGHMX16rb79Jyylq60CiF6Z1Z@dpg-d31353d6ubrc73c1jfmg-a.oregon-postgres.render.com/vemu_fee
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        value: your-secret-key-change-in-production
+    healthCheckPath: /

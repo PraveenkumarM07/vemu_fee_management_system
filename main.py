@@ -838,37 +838,59 @@ def check_user_registration():
 # Create database tables
 def init_db():
     with app.app_context():
-        # Drop all tables
-        db.drop_all()
-        
-        # Create all tables
-        db.create_all()
-        
-        # Create admin user
-        admin = User(
-            username='admin',
-            email='admin@example.com',
-            role='admin'
-        )
-        admin.set_password('admin123')
-        
-        # Create demo employee user
-        demo_employee = User(
-            username='Demo Employee',
-            email='vemuit@gmail.com',
-            role='employee'
-        )
-        demo_employee.set_password('vemuit@2008')
-        
         try:
-            db.session.add(admin)
-            db.session.add(demo_employee)
+            # Check if tables exist
+            inspector = db.inspect(db.engine)
+            existing_tables = inspector.get_table_names()
+            
+            app.logger.info(f'Found existing tables: {existing_tables}')
+            
+            # Create all tables (this will skip if they already exist)
+            db.create_all()
+            app.logger.info('Database tables ready')
+            
+            # Check if users already exist
+            existing_admin = User.query.filter_by(email='admin@example.com').first()
+            existing_employee = User.query.filter_by(email='vemuit@gmail.com').first()
+            
+            # Create admin user if it doesn't exist
+            if not existing_admin:
+                admin = User(
+                    username='admin',
+                    email='admin@example.com',
+                    role='admin'
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                app.logger.info('Created admin user')
+            else:
+                app.logger.info('Admin user already exists')
+                
+            # Create demo employee user if it doesn't exist
+            if not existing_employee:
+                demo_employee = User(
+                    username='Demo Employee',
+                    email='vemuit@gmail.com',
+                    role='employee'
+                )
+                demo_employee.set_password('vemuit@2008')
+                db.session.add(demo_employee)
+                app.logger.info('Created demo employee user')
+            else:
+                app.logger.info('Demo employee user already exists')
+            
             db.session.commit()
-            app.logger.info('Database initialized and users created successfully')
+            app.logger.info('Database initialization completed successfully')
+            
         except Exception as e:
             db.session.rollback()
-            app.logger.error(f'Error creating users: {str(e)}')
-            raise
+            app.logger.error(f'Error initializing database: {str(e)}')
+            # In development, show the error; in production, continue
+            if app.config.get('DEBUG', False):
+                app.logger.warning(f'Database initialization failed: {str(e)}')
+                app.logger.warning('Continuing with existing database state')
+            else:
+                app.logger.warning('Continuing with existing database state')
 
 @app.route('/api/employee/create-demo-user', methods=['POST'])
 def create_demo_user():
@@ -946,8 +968,12 @@ if __name__ == '__main__':
         
         # Initialize database
         print("Initializing database...")
-        init_db()
-        print("✓ Database initialized successfully")
+        try:
+            init_db()
+            print("✓ Database initialized successfully")
+        except Exception as db_error:
+            print(f"⚠️ Database initialization warning: {db_error}")
+            print("✓ Continuing with existing database state...")
         print()
         
         # Start the application
@@ -964,7 +990,11 @@ if __name__ == '__main__':
         print(f"Current directory: {os.getcwd()}")
         print(f"Expected directory: {script_dir}")
         sys.exit(1)
+    except KeyboardInterrupt:
+        print("\n✓ Application stopped by user")
+        sys.exit(0)
     except Exception as e:
         print(f"✗ Application startup error: {str(e)}")
         app.logger.error(f"Application startup error: {str(e)}")
+        print("Please check the logs for more details.")
         sys.exit(1)

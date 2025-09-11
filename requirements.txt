@@ -1,0 +1,12 @@
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Migrate==4.0.5
+Flask-CORS==4.0.0
+Werkzeug==2.3.7
+requests==2.31.0
+python-dotenv==1.0.0 
+gunicorn==23.0.0
+# Cloud Database Drivers
+psycopg2-binary==2.9.7  # PostgreSQL driver
+PyMySQL==1.1.0          # MySQL driver
+cryptography==41.0.4    # For secure connections

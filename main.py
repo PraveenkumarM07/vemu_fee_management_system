@@ -17,6 +17,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# Import database configuration
+from config import DATABASE_URL, print_db_info
+
 # Ensure we're running from the correct directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -37,14 +40,12 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = f'sqlite:///{os.path.join(BaseConfig.BASE_DIR, "instance", "fee_management.db")}'
+    # Use PostgreSQL for development (same as production)
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', DATABASE_URL)
 
 class ProductionConfig(BaseConfig):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL',
-        'postgresql://username:password@host:port/dbname'
-    )
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', DATABASE_URL)
 
 config = {
     'development': DevelopmentConfig,
@@ -937,6 +938,10 @@ if __name__ == '__main__':
         print(f"Working directory: {os.getcwd()}")
         print(f"Script directory: {script_dir}")
         print(f"Instance path: {app.config.get('INSTANCE_PATH', 'Not set')}")
+        print()
+        
+        # Show database configuration
+        print_db_info()
         print()
         
         # Initialize database

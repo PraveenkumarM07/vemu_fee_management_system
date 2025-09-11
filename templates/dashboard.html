@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Dashboard - VEMU Fee Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #818cf8;
+            --secondary: #10b981;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --white: #ffffff;
+            --gray-100: #f1f5f9;
+            --gray-200: #e2e8f0;
+            --gray-300: #cbd5e1;
+            --gray-400: #94a3b8;
+            --gray-500: #64748b;
+            --gray-600: #475569;
+            --gray-700: #334155;
+            --gray-800: #1e293b;
+            --gray-900: #0f172a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--gray-100);
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--white);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .sidebar-nav {
+            padding: 1rem 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: var(--gray-600);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            background-color: var(--gray-100);
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+
+        .nav-item i {
+            margin-right: 0.75rem;
+            width: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 2rem;
+        }
+
+        .header {
+            background: var(--white);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: var(--gray-800);
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logout-btn {
+            background: var(--danger);
+            color: var(--white);
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+            transform: translateY(-2px);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card.primary i { color: var(--primary); }
+        .stat-card.success i { color: var(--success); }
+        .stat-card.warning i { color: var(--warning); }
+        .stat-card.danger i { color: var(--danger); }
+
+        .stat-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--gray-800);
+        }
+
+        .stat-card p {
+            color: var(--gray-600);
+            font-weight: 500;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            background: var(--gray-50);
+        }
+
+        .card-header h3 {
+            color: var(--gray-800);
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--gray-700);
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #3730a3;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: var(--white);
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: var(--white);
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .table th {
+            background: var(--gray-50);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .table tbody tr:hover {
+            background: var(--gray-50);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-verified {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-rejected {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .alert {
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+                padding: 1rem;
+            }
+
+            .header {
+                padding: 1rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-graduation-cap"></i> VEMU Dashboard</h2>
+            </div>
+            <div class="sidebar-nav">
+                <a href="#" class="nav-item active" onclick="showSection('overview')">
+                    <i class="fas fa-tachometer-alt"></i> Overview
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('students')">
+                    <i class="fas fa-users"></i> Students
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('transactions')">
+                    <i class="fas fa-exchange-alt"></i> Transactions
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('complaints')">
+                    <i class="fas fa-comments"></i> Complaints
+                </a>
+                <a href="#" class="nav-item" onclick="showSection('reports')">
+                    <i class="fas fa-chart-bar"></i> Reports
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 id="pageTitle">Dashboard Overview</h1>
+                <div class="user-info">
+                    <span id="userWelcome">Welcome, Employee</span>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </header>
+
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card primary">
+                        <i class="fas fa-users"></i>
+                        <h3 id="totalStudents">0</h3>
+                        <p>Total Students</p>
+                    </div>
+                    <div class="stat-card success">
+                        <i class="fas fa-check-circle"></i>
+                        <h3 id="paidStudents">0</h3>
+                        <p>Fees Paid</p>
+                    </div>
+                    <div class="stat-card warning">
+                        <i class="fas fa-clock"></i>
+                        <h3 id="pendingStudents">0</h3>
+                        <p>Fees Pending</p>
+                    </div>
+                    <div class="stat-card danger">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3 id="pendingTransactions">0</h3>
+                        <p>Pending Verifications</p>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Recent Transactions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentTransactions">
+                            <p>Loading recent transactions...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Students Section -->
+            <section id="students" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Student Management</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Search Student</label>
+                            <input type="text" class="form-control" id="studentSearch" placeholder="Enter roll number or name">
+                        </div>
+                        <button class="btn btn-primary" onclick="searchStudent()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                        <button class="btn btn-success" onclick="showAddStudentForm()">
+                            <i class="fas fa-plus"></i> Add Student
+                        </button>
+                    </div>
+                </div>
+
+                <div id="studentResults" class="card" style="margin-top: 2rem; display: none;">
+                    <div class="card-header">
+                        <h3>Student Details</h3>
+                    </div>
+                    <div class="card-body" id="studentDetailsContent">
+                        <!-- Student details will be loaded here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transactions Section -->
+            <section id="transactions" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Transaction Verification</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="transactionsList">
+                            <p>Loading transactions...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Complaints Section -->
+            <section id="complaints" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Student Complaints</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="complaintsList">
+                            <p>Loading complaints...</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Reports Section -->
+            <section id="reports" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Fee Reports</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label>Filter by Branch</label>
+                            <select class="form-control" id="branchFilter">
+                                <option value="">All Branches</option>
+                                <option value="CSE">Computer Science</option>
+                                <option value="ECE">Electronics</option>
+                                <option value="MECH">Mechanical</option>
+                                <option value="CIVIL">Civil</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Academic Year</label>
+                            <select class="form-control" id="yearFilter">
+                                <option value="">All Years</option>
+                                <option value="2023-24">2023-24</option>
+                                <option value="2024-25">2024-25</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateReport()">
+                            <i class="fas fa-file-alt"></i> Generate Report
+                        </button>
+                    </div>
+                </div>
+
+                <div id="reportResults" class="card" style="margin-top: 2rem; display: none;">
+                    <div class="card-header">
+                        <h3>Report Results</h3>
+                    </div>
+                    <div class="card-body" id="reportContent">
+                        <!-- Report content will be loaded here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading">
+        <i class="fas fa-spinner fa-spin fa-3x"></i>
+        <p>Loading...</p>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let studentsData = [];
+        let transactionsData = [];
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthentication();
+            loadDashboardData();
+        });
+
+        // Check if user is authenticated
+        function checkAuthentication() {
+            fetch('/api/employee/session')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentUser = data.user;
+                        document.getElementById('userWelcome').textContent = `Welcome, ${data.user.username}`;
+                    } else {
+                        window.location.href = '/employloginpage';
+                    }
+                })
+                .catch(error => {
+                    console.error('Authentication check failed:', error);
+                    window.location.href = '/employloginpage';
+                });
+        }
+
+        // Load dashboard data
+        function loadDashboardData() {
+            loadStudentsData();
+            loadTransactionsData();
+        }
+
+        // Load students data
+        function loadStudentsData() {
+            fetch('/api/students/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        studentsData = data.students;
+                        updateStatistics(data.statistics);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading students:', error);
+                });
+        }
+
+        // Load transactions data
+        function loadTransactionsData() {
+            // This would typically fetch from an API endpoint
+            // For now, we'll simulate with empty data
+            transactionsData = [];
+            updateTransactionsList();
+        }
+
+        // Update statistics
+        function updateStatistics(stats) {
+            document.getElementById('totalStudents').textContent = stats.total || 0;
+            document.getElementById('paidStudents').textContent = stats.paid || 0;
+            document.getElementById('pendingStudents').textContent = stats.pending || 0;
+            document.getElementById('pendingTransactions').textContent = '0'; // Would come from transactions API
+        }
+
+        // Show section
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Remove active class from nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionName).classList.add('active');
+
+            // Add active class to clicked nav item
+            event.target.classList.add('active');
+
+            // Update page title
+            const titles = {
+                'overview': 'Dashboard Overview',
+                'students': 'Student Management',
+                'transactions': 'Transaction Verification',
+                'complaints': 'Student Complaints',
+                'reports': 'Fee Reports'
+            };
+            document.getElementById('pageTitle').textContent = titles[sectionName] || 'Dashboard';
+        }
+
+        // Search student
+        function searchStudent() {
+            const searchTerm = document.getElementById('studentSearch').value.trim();
+            if (!searchTerm) {
+                alert('Please enter a roll number or name to search');
+                return;
+            }
+
+            const student = studentsData.find(s => 
+                s.rollNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                s.name.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+
+            if (student) {
+                displayStudentDetails(student);
+            } else {
+                document.getElementById('studentResults').style.display = 'none';
+                alert('Student not found');
+            }
+        }
+
+        // Display student details
+        function displayStudentDetails(student) {
+            const content = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <h4>${student.name}</h4>
+                        <p><strong>Roll Number:</strong> ${student.rollNumber}</p>
+                        <p><strong>Branch:</strong> ${student.branch}</p>
+                        <p><strong>Academic Year:</strong> ${student.academicYear}</p>
+                        <p><strong>Category:</strong> ${student.category}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>Fee Details</h5>
+                        <p><strong>Total Fees:</strong> ₹${student.totalAmount}</p>
+                        <p><strong>Paid Amount:</strong> ₹${student.paidAmount}</p>
+                        <p><strong>Pending Amount:</strong> ₹${student.pendingAmount}</p>
+                        <p><strong>Status:</strong> 
+                            <span class="status-badge ${student.pendingAmount > 0 ? 'status-pending' : 'status-verified'}">
+                                ${student.pendingAmount > 0 ? 'Pending' : 'Paid'}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('studentDetailsContent').innerHTML = content;
+            document.getElementById('studentResults').style.display = 'block';
+        }
+
+        // Show add student form
+        function showAddStudentForm() {
+            const formHtml = `
+                <div class="form-group">
+                    <label>Student Name</label>
+                    <input type="text" class="form-control" id="newStudentName" required>
+                </div>
+                <div class="form-group">
+                    <label>Roll Number</label>
+                    <input type="text" class="form-control" id="newStudentRoll" required>
+                </div>
+                <div class="form-group">
+                    <label>Branch</label>
+                    <select class="form-control" id="newStudentBranch" required>
+                        <option value="">Select Branch</option>
+                        <option value="CSE">Computer Science</option>
+                        <option value="ECE">Electronics</option>
+                        <option value="MECH">Mechanical</option>
+                        <option value="CIVIL">Civil</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Academic Year</label>
+                    <select class="form-control" id="newStudentYear" required>
+                        <option value="">Select Year</option>
+                        <option value="2023-24">2023-24</option>
+                        <option value="2024-25">2024-25</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select class="form-control" id="newStudentCategory" required>
+                        <option value="">Select Category</option>
+                        <option value="General">General</option>
+                        <option value="OBC">OBC</option>
+                        <option value="SC">SC</option>
+                        <option value="ST">ST</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Total Fees</label>
+                    <input type="number" class="form-control" id="newStudentFees" required>
+                </div>
+                <button class="btn btn-success" onclick="saveNewStudent()">Save Student</button>
+                <button class="btn btn-secondary" onclick="cancelAddStudent()">Cancel</button>
+            `;
+
+            document.getElementById('studentDetailsContent').innerHTML = formHtml;
+            document.getElementById('studentResults').style.display = 'block';
+        }
+
+        // Save new student
+        function saveNewStudent() {
+            const studentData = {
+                name: document.getElementById('newStudentName').value,
+                rollNumber: document.getElementById('newStudentRoll').value,
+                branch: document.getElementById('newStudentBranch').value,
+                academicYear: document.getElementById('newStudentYear').value,
+                category: document.getElementById('newStudentCategory').value,
+                totalAmount: parseFloat(document.getElementById('newStudentFees').value),
+                paidAmount: 0,
+                pendingAmount: parseFloat(document.getElementById('newStudentFees').value)
+            };
+
+            // Validate required fields
+            if (!studentData.name || !studentData.rollNumber || !studentData.branch || 
+                !studentData.academicYear || !studentData.category || !studentData.totalAmount) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            fetch('/api/student/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(studentData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Student added successfully');
+                    loadStudentsData();
+                    cancelAddStudent();
+                } else {
+                    alert('Error adding student: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error saving student:', error);
+                alert('Error saving student');
+            });
+        }
+
+        // Cancel add student
+        function cancelAddStudent() {
+            document.getElementById('studentResults').style.display = 'none';
+        }
+
+        // Update transactions list
+        function updateTransactionsList() {
+            const content = transactionsData.length > 0 ? 
+                transactionsData.map(t => `
+                    <div class="transaction-item">
+                        <p><strong>Transaction ID:</strong> ${t.id}</p>
+                        <p><strong>Amount:</strong> ₹${t.amount}</p>
+                        <p><strong>Status:</strong> <span class="status-badge status-${t.status}">${t.status}</span></p>
+                    </div>
+                `).join('') : 
+                '<p>No pending transactions</p>';
+
+            document.getElementById('transactionsList').innerHTML = content;
+        }
+
+        // Generate report
+        function generateReport() {
+            const branch = document.getElementById('branchFilter').value;
+            const year = document.getElementById('yearFilter').value;
+
+            let filteredStudents = studentsData;
+
+            if (branch) {
+                filteredStudents = filteredStudents.filter(s => s.branch === branch);
+            }
+
+            if (year) {
+                filteredStudents = filteredStudents.filter(s => s.academicYear === year);
+            }
+
+            const reportHtml = `
+                <h4>Fee Report</h4>
+                <p><strong>Total Students:</strong> ${filteredStudents.length}</p>
+                <p><strong>Fees Collected:</strong> ₹${filteredStudents.reduce((sum, s) => sum + s.paidAmount, 0)}</p>
+                <p><strong>Pending Fees:</strong> ₹${filteredStudents.reduce((sum, s) => sum + s.pendingAmount, 0)}</p>
+                
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Name</th>
+                            <th>Branch</th>
+                            <th>Total Fees</th>
+                            <th>Paid</th>
+                            <th>Pending</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filteredStudents.map(s => `
+                            <tr>
+                                <td>${s.rollNumber}</td>
+                                <td>${s.name}</td>
+                                <td>${s.branch}</td>
+                                <td>₹${s.totalAmount}</td>
+                                <td>₹${s.paidAmount}</td>
+                                <td>₹${s.pendingAmount}</td>
+                                <td>
+                                    <span class="status-badge ${s.pendingAmount > 0 ? 'status-pending' : 'status-verified'}">
+                                        ${s.pendingAmount > 0 ? 'Pending' : 'Paid'}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            document.getElementById('reportContent').innerHTML = reportHtml;
+            document.getElementById('reportResults').style.display = 'block';
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                fetch('/api/logout')
+                    .then(response => response.json())
+                    .then(data => {
+                        window.location.href = '/';
+                    })
+                    .catch(error => {
+                        console.error('Logout error:', error);
+                        window.location.href = '/';
+                    });
+            }
+        }
+
+        // Mobile sidebar toggle
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('open');
+        }
+    </script>
+</body>
+</html>

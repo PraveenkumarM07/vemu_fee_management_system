@@ -607,6 +607,57 @@ def save_student():
 @app.route('/api/students/list')
 def get_students():
     try:
+        # Create some sample students if none exist
+        if Student.query.count() == 0:
+            sample_students = [
+                Student(
+                    name="John Doe",
+                    roll_number="21CSE001",
+                    gender="Male",
+                    category="General",
+                    academic_year="2024-25",
+                    branch="CSE",
+                    fee_type="Tuition Fee",
+                    total_fees=75000,
+                    paid_amount=25000,
+                    pending_amount=50000
+                ),
+                Student(
+                    name="Jane Smith",
+                    roll_number="21ECE002",
+                    gender="Female",
+                    category="OBC",
+                    academic_year="2024-25",
+                    branch="ECE",
+                    fee_type="Tuition Fee",
+                    total_fees=75000,
+                    paid_amount=75000,
+                    pending_amount=0
+                ),
+                Student(
+                    name="Mike Johnson",
+                    roll_number="21MECH003",
+                    gender="Male",
+                    category="SC",
+                    academic_year="2024-25",
+                    branch="MECH",
+                    fee_type="Tuition Fee",
+                    total_fees=75000,
+                    paid_amount=0,
+                    pending_amount=75000
+                )
+            ]
+            
+            for student in sample_students:
+                db.session.add(student)
+            
+            try:
+                db.session.commit()
+                app.logger.info('Sample students created successfully')
+            except Exception as e:
+                db.session.rollback()
+                app.logger.error(f'Error creating sample students: {str(e)}')
+        
         students = Student.query.all()
         stats = {
             'total': len(students),
@@ -630,6 +681,7 @@ def get_students():
         })
 
     except Exception as e:
+        app.logger.error(f'Error in get_students: {str(e)}')
         return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/students/filter', methods=['POST'])

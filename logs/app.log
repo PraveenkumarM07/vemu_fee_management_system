@@ -1,0 +1,10 @@
+2025-09-12 09:31:08,898 - main - INFO - [main.py:846] - Found existing tables: ['complaints', 'students', 'transactions', 'users']
+2025-09-12 09:31:08,908 - main - INFO - [main.py:850] - Database tables ready
+2025-09-12 09:31:08,941 - main - INFO - [main.py:867] - Admin user already exists
+2025-09-12 09:31:08,941 - main - INFO - [main.py:880] - Demo employee user already exists
+2025-09-12 09:31:08,941 - main - INFO - [main.py:883] - Database initialization completed successfully
+2025-09-12 09:31:11,128 - main - INFO - [main.py:846] - Found existing tables: ['complaints', 'students', 'transactions', 'users']
+2025-09-12 09:31:11,130 - main - INFO - [main.py:850] - Database tables ready
+2025-09-12 09:31:11,157 - main - INFO - [main.py:867] - Admin user already exists
+2025-09-12 09:31:11,157 - main - INFO - [main.py:880] - Demo employee user already exists
+2025-09-12 09:31:11,160 - main - INFO - [main.py:883] - Database initialization completed successfully

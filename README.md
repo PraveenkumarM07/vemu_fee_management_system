@@ -6,8 +6,9 @@
 
 A modern **Student Fee Management System** designed to simplify and digitize the management of educational fee payments, invoices, transactions, billing, and financial records.
 
+**“The first project is not about perfection; it is about turning what you learn into something real.”**
+
 🌐 **Live Website:**
-“The first project is not about perfection; it is about turning what you learn into something real.”
 **[VEMU Fee Management System](https://vemu-fee-management-system-e8ua.onrender.com/)**
 
 ---
